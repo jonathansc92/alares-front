@@ -1,0 +1,66 @@
+$primaryColor: #098abd;
+$secondaryColor: #6ab96e;
+
+.defaultColor {
+    color: $primaryColor;
+}
+
+.secondaryColor {
+    color: $secondaryColor;
+}
+
+.bestColor {
+    color: white;
+}
+
+.best {
+    color: $primaryColor;
+    border: 2px solid $primaryColor;
+    border-radius: 38px;
+    width: 307px;
+    padding: 0.5rem;
+    margin-top: -3.7rem;
+}
+
+.plan {
+    border-radius: 38px;
+    border: 2px solid $primaryColor;
+    min-width: 360px;
+    min-height: 436px;
+    
+    &.bestPlan {
+        background: $primaryColor;
+    }
+}
+
+.speed {
+    font-size: 3rem;
+}
+
+.comboList {
+    min-height: 104px;
+}
+
+.unit {
+    color: $secondaryColor;
+    font-size: 1.3rem;
+}
+
+.started {
+    background: $secondaryColor;
+}
+
+.price {
+    color: $secondaryColor;
+}
+
+.btnContract {
+    width: 198px;
+    border-radius: 27px;
+    border: 2px solid $primaryColor;
+}
+
+.btnContract:hover {
+    background: $primaryColor;
+    border: 2px solid $secondaryColor;
+}
