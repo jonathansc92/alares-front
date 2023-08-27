@@ -165,9 +165,9 @@ const Page = () => {
     return <InputNumber value={options.value} onValueChange={(e) => options.editorCallback(e.value)} />;
   };
 
-  const priceBodyTemplate = (rowData) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(rowData.price);
-  };
+  // const priceBodyTemplate = (rowData) => {
+  //   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(rowData.price);
+  // };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
