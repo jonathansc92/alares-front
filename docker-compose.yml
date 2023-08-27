@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  app:
+    build: "."
+    container_name: alares-front
+    restart: "no"        
+    volumes:
+      - ./:/app
+    command: sh -c "npm run dev"
+    ports:
+      - 3000:3000
+    expose:
+      - 3000
+networks:
+  default:
+    name: alares

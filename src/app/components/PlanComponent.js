@@ -1,30 +1,41 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import styles from '../../styles/components/Plan.module.scss';
 import ComboComponent from './ComboComponent';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 import { useFormik } from 'formik';
-import { classNames } from 'primereact/utils';
+import { InputMask } from 'primereact/inputmask';
+import { Toast } from 'primereact/toast';
 
-export default function PlanComponent({ speed, unit, price, best, wifi, games, movies }) {
+export default function PlanComponent({ planId, speed, unit, price, best, wifi, games, movies }) {
+    let emptyOrder = {
+        name: null,
+        email: null,
+        phone: null,
+        plan_id: null,
+    };
+
     const [visible, setVisible] = useState(false);
+    const [order, setOrder] = useState(emptyOrder);
+    const [loading, setLoading] = useState(false);
+    const toast = useRef(null);
 
     const combos = (
-        <div class="flex justify-center">
+        <div className="flex justify-center">
             <ul role="list" className={`${styles.comboList} mb-8 space-y-4 text-left my-8`}>
-                {wifi ?
-                    <ComboComponent combo="Wifi" colorClass={`${best ? styles.bestColor : styles.defaultColor}`} />
+                {wifi == 'sim' ?
+                    <ComboComponent combo="Wifi" colorClass={`${best == "sim" ? styles.bestColor : styles.defaultColor}`} />
                     : ''
                 }
-                {games ?
-                    <ComboComponent combo="Games" colorClass={`${best ? styles.bestColor : styles.defaultColor}`} />
+                {games == 'sim' ?
+                    <ComboComponent combo="Games" colorClass={`${best == "sim" ? styles.bestColor : styles.defaultColor}`} />
                     : ''
                 }
-                {movies ?
-                    <ComboComponent combo="Canais de Filmes" colorClass={`${best ? styles.bestColor : styles.defaultColor}`} />
+                {movies == 'sim' ?
+                    <ComboComponent combo="Canais de Filmes" colorClass={`${best == "sim" ? styles.bestColor : styles.defaultColor}`} />
                     : ''
                 }
             </ul>
@@ -33,8 +44,7 @@ export default function PlanComponent({ speed, unit, price, best, wifi, games, m
 
     const footerContent = (
         <div>
-            <Button label="No" icon="pi pi-times" onClick={() => setVisible(false)} className="p-button-text" />
-            <Button label="Yes" icon="pi pi-check" onClick={() => setVisible(false)} autoFocus />
+            <Button label="Confirmar contrato" icon="pi pi-check" onClick={() => saveContract()} autoFocus loading={loading} />
         </div>
     );
 
@@ -65,17 +75,52 @@ export default function PlanComponent({ speed, unit, price, best, wifi, games, m
 
     const bestPlan = (
         <div className={`${styles.best} flex flex-col mx-auto max-w-lg text-center bg-white rounded-lg border mb-8`}>
-            <span class="">
+            <span className="">
                 Melhor Plano
             </span>
         </div >
     );
 
+    const onInputChange = (e, name) => {
+        const val = (e.target && e.target.value) || '';
+        let _order = { ...order };
+
+        _order[`${name}`] = val;
+
+        setOrder(_order);
+    };
+
+
+    const saveContract = async () => {
+        setLoading(true);
+
+        let _order = { ...order };
+
+        const response = await fetch(`/api/orders`, {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: _order.name,
+                email: _order.email,
+                phone: _order.phone,
+                plan_id: planId
+            }),
+        });
+
+        setLoading(false);
+        setVisible(false);
+
+        toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Aguarde a confirmação do contrato.', life: 3000 });
+    };
+
     return (
         <div>
-            <div className={`${styles.plan} ${best ? styles.bestPlan : ''} flex flex-col p-6 mx-auto max-w-lg text-center bg-white rounded-lg border xl:p-8`}>
-                {best ? bestPlan : ''}
-                <h3 className={`${styles.speed} ${best ? styles.bestColor : styles.defaultColor} mb-4 text-2xl font-semibold`}>
+            <Toast ref={toast} />
+            <div className={`${styles.plan} ${best == 'sim' ? styles.bestPlan : ''} flex flex-col p-6 mx-auto max-w-lg text-center bg-white rounded-lg border xl:p-8`}>
+                {best == 'sim' ? bestPlan : ''}
+                <h3 className={`${styles.speed} ${best == 'sim' ? styles.bestColor : styles.defaultColor} mb-4 text-2xl font-semibold`}>
                     {speed}
                 </h3>
                 <p className={`${styles.unit} font-light sm:text-lg font-semibold`}>
@@ -83,23 +128,39 @@ export default function PlanComponent({ speed, unit, price, best, wifi, games, m
                 </p>
                 {combos}
                 <div className={`flex justify-center items-baseline ${styles.price}`}>
-                    <span className={`mr-2 text-5xl font-extrabold`}>R$ {price}</span>
+                    <span className={`mr-2 text-5xl font-extrabold`}>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price)}</span>
                     <span>/mês</span>
                 </div>
                 <div className="flex justify-center">
                     <Button className={`${styles.btnContract} ${styles.started}`} label="Contrate Já" onClick={() => setVisible(true)} />
                 </div>
             </div>
-            <Dialog header="Header" visible={visible} style={{ width: '50vw' }} onHide={() => setVisible(false)} footer={footerContent}>
-                <InputText
-                    id="value"
-                    name="value"
-                    value={formik.values.value}
-                    onChange={(e) => {
-                        formik.setFieldValue('value', e.target.value);
-                    }}
-                    className={classNames({ 'p-invalid': isFormFieldInvalid('value') })}
-                />
+            <Dialog
+                visible={visible} style={{ width: '32rem' }}
+                breakpoints={{ '960px': '75vw', '641px': '90vw' }}
+                header={`Plano ${speed} ${unit} por ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price)} / mês`}
+                onHide={() => setVisible(false)}
+                footer={footerContent}
+                className="p-fluid"
+            >
+                <div className="mb-6">
+                    <label htmlFor="name" className="font-bold">
+                        Nome
+                    </label>
+                    <InputText value={order.name} onChange={(e) => onInputChange(e, 'name')} required rows={3} cols={20} placeholder="Digite seu nome" />
+                </div>
+                <div className="mb-6">
+                    <label htmlFor="email" className="font-bold">
+                        Email
+                    </label>
+                    <InputText value={order.email} onChange={(e) => onInputChange(e, 'email')} required rows={3} cols={20} placeholder="Digite seu email" />
+                </div>
+                <div className="mb-6">
+                    <label htmlFor="phone" className="font-bold">
+                        Telefone
+                    </label>
+                    <InputMask id="phone" value={order.phone} onChange={(e) => onInputChange(e, 'phone')} mask="(99) 999999999" placeholder="(99) 999999999" unmask></InputMask>
+                </div>
             </Dialog>
         </div>
     )

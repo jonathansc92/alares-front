@@ -13,6 +13,7 @@ const Page = () => {
         }
       });
       const result = await response.json();
+
       setPlans(result.data);
     }
 
@@ -36,8 +37,9 @@ const Page = () => {
                   <>
                     <div key={index}>
                       <PlanComponent
+                        planId={plan.id}
                         speed={plan.speed}
-                        unit={plan.giga ? "Giga(s)" : "Mega(s)"}
+                        unit={plan.giga == 'sim' ? "Giga(s)" : "Mega(s)"}
                         price={plan.price}
                         wifi={plan.wifi}
                         games={plan.games}

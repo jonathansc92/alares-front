@@ -134,16 +134,17 @@ const Page = () => {
         <div className="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
           <div className="mx-auto max-w-screen-md text-center mb-8 lg:mb-12">
             <h2 className="mb-4 text-4xl tracking-tight font-extrabold">
-              Pedidos
+              Cadastro de Pedidos
             </h2>
           </div>
           <div>
             <DataTable value={orders} editMode="row" dataKey="id" onRowEditComplete={onRowEditComplete} tableStyle={{ minWidth: '50rem' }} loading={loading}>
-              <Column field="id" header="ID" style={{ width: '20%' }}></Column>
-              <Column field="name" header="Nome" style={{ width: '20%' }}></Column>
-              <Column field="email" header="Email" style={{ width: '20%' }}></Column>
-              <Column field="phone" header="Telefone" style={{ width: '20%' }}></Column>
-              <Column field="status" header="Status" body={statusBodyTemplate} editor={(options) => statusEditor(options)} style={{ width: '30%' }}></Column>
+              <Column field="id" sortable header="ID" style={{ width: '20%' }}></Column>
+              <Column field="plan.speed" sortable header=" Plano" style={{ width: '20%' }}></Column>
+              <Column field="name" sortable header="Nome" style={{ width: '20%' }}></Column>
+              <Column field="email" sortable header="Email" style={{ width: '20%' }}></Column>
+              <Column field="phone" sortable header="Telefone" style={{ width: '20%' }}></Column>
+              <Column field="status" sortable header="Status" body={statusBodyTemplate} editor={(options) => statusEditor(options)} style={{ width: '30%' }}></Column>
               <Column rowEditor headerStyle={{ width: '10%', minWidth: '8rem' }} bodyStyle={{ textAlign: 'center' }}></Column>
               <Column body={actionBodyTemplate} exportable={false} style={{ minWidth: '8rem' }}></Column>
             </DataTable>

@@ -3,32 +3,42 @@ import React, { useEffect, useState, useRef } from "react";
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Dropdown } from 'primereact/dropdown';
-import { Tag } from 'primereact/tag';
 import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
 import { InputNumber } from 'primereact/inputnumber';
-import { InputMask } from 'primereact/inputmask';
+import { Dialog } from 'primereact/dialog';
+import { Checkbox } from 'primereact/checkbox';
 
 const Page = () => {
-  let emptyplan = {
+  let emptyPlan = {
     id: null,
-    plan_id: null,
-    name: '',
-    email: null,
-    phone: '',
-    status: 'in progress'
+    speed: null,
+    price: null,
+    wifi: 'sim',
+    games: 'não',
+    movies: 'não',
+    best: 'não',
+    giga: 'não',
   };
 
   const [plans, setPlans] = useState([]);
-  const [plan, setPlan] = useState(emptyplan);
+  const [plan, setPlan] = useState(emptyPlan);
   const [loading, setLoading] = useState(false);
   const [hasCombo] = useState(['sim', 'não']);
   const toast = useRef(null);
+  const [planDialog, setPlanDialog] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [checkedWifi, setCheckedWifi] = useState(false);
+  const [checkedGames, setCheckedGames] = useState(false);
+  const [checkedMovies, setCheckedMovies] = useState(false);
+  const [checkedBest, setCheckedBest] = useState(false);
+  const [checkedGiga, setCheckedGiga] = useState(false);
 
   useEffect(() => {
     const getData = async () => {
       setLoading(true);
       const response = await fetch("/api/plans", {
+        method: 'GET',
         headers: {
           "Content-Type": "application/json"
         }
@@ -74,7 +84,6 @@ const Page = () => {
         toast.current.show({ severity: 'error', summary: 'Erro', detail: 'Não foi possível alterar o plano.', life: 3000 });
       } else {
         _plans[index] = newData;
-        console.log(newData)
         setPlans(_plans);
         toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Plano alterado com sucesso.', life: 3000 });
       }
@@ -165,9 +174,77 @@ const Page = () => {
     return <InputNumber value={options.value} onValueChange={(e) => options.editorCallback(e.value)} />;
   };
 
-  // const priceBodyTemplate = (rowData) => {
-  //   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(rowData.price);
-  // };
+  const speedBodyTemplate = (rowData) => {
+    return rowData.speed;
+  };
+
+  const addPlan = () => {
+    setSubmitted(false);
+    setPlanDialog(true);
+  };
+
+  const hideDialog = () => {
+    setSubmitted(false);
+    setPlanDialog(false);
+  };
+
+  const getEnumCombo = (isChecked) => {
+    if (isChecked) {
+      return 'sim';
+    } else {
+      return 'não';
+    }
+  }
+
+  const savePlan = async () => {
+    setPlanDialog(false);
+    setLoading(true);
+    setSubmitted(true);
+
+    let _plans = [...plans];
+    let _plan = { ...plan };
+
+    const response = await fetch(`/api/plans`, {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        speed: _plan.speed,
+        price: _plan.price,
+        wifi: getEnumCombo(checkedWifi),
+        movies: getEnumCombo(checkedMovies),
+        games: getEnumCombo(checkedGames),
+        best: getEnumCombo(checkedBest),
+        giga: getEnumCombo(checkedGiga)
+      }),
+    });
+
+    const returnal = await response.json();
+
+    setPlans(_plans);
+    setPlan(emptyPlan);
+    _plans.push(returnal?.data.data);
+    toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Plano alterado com sucesso.', life: 3000 });
+
+    setLoading(false);
+  };
+
+  const plantDialogFooter = (
+    <React.Fragment>
+      <Button label="Cancelar" icon="pi pi-times" outlined onClick={hideDialog} />
+      <Button label="Salvar" icon="pi pi-check" onClick={savePlan} />
+    </React.Fragment>
+  );
+
+  const onInputNumberChange = (e, name) => {
+    const val = e.value || 0;
+    let _plan = { ...plan };
+
+    _plan[`${name}`] = val;
+
+    setPlan(_plan);
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -176,23 +253,60 @@ const Page = () => {
         <div className="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
           <div className="mx-auto max-w-screen-md text-center mb-8 lg:mb-12">
             <h2 className="mb-4 text-4xl tracking-tight font-extrabold">
-              Pedidos
+                Cadastro de Planos
             </h2>
+          </div>
+          <div className="mb-8 lg:mb-12">
+            <Button label="Adicionar Plano" icon="pi pi-plus" severity="success" onClick={addPlan} />
           </div>
           <div>
             <DataTable value={plans} editMode="row" dataKey="id" onRowEditComplete={onRowEditComplete} tableStyle={{ minWidth: '50rem' }} loading={loading}>
-              <Column field="id" header="ID" style={{ width: '20%' }}></Column>
-              <Column field="speed" header="Velocidade" body={priceBodyTemplate} editor={(options) => priceEditor(options)} style={{ width: '20%' }}></Column>
-              <Column field="price" header="Valor" body={priceBodyTemplate} editor={(options) => priceEditor(options)} style={{ width: '20%' }}></Column>
-              <Column field="wifi" header="Wifi" body={comboWifiBodyTemplate} editor={(options) => statusEditor(options)} style={{ width: '30%' }}></Column>
-              <Column field="games" header="Games" body={comboGamesBodyTemplate} editor={(options) => statusEditor(options)} style={{ width: '30%' }}></Column>
-              <Column field="movies" header="Filmes" body={comboMoviesBodyTemplate} editor={(options) => statusEditor(options)} style={{ width: '30%' }}></Column>
-              <Column field="best" header="Melhor Plano?" body={comboBestBodyTemplate} editor={(options) => statusEditor(options)} style={{ width: '30%' }}></Column>
-              <Column field="giga" header="Giga?" body={comboGigaBodyTemplate} editor={(options) => statusEditor(options)} style={{ width: '30%' }}></Column>
+              <Column field="id" sortable header="ID" style={{ width: '20%' }}></Column>
+              <Column field="speed" sortable header="Velocidade" body={speedBodyTemplate} editor={(options) => speedEditor(options)} style={{ width: '20%' }}></Column>
+              <Column field="price" sortable header="Valor" body={priceBodyTemplate} editor={(options) => priceEditor(options)} style={{ width: '20%' }}></Column>
+              <Column field="wifi" sortable header="Wifi" body={comboWifiBodyTemplate} editor={(options) => statusEditor(options)} style={{ width: '30%' }}></Column>
+              <Column field="games" sortable header="Games" body={comboGamesBodyTemplate} editor={(options) => statusEditor(options)} style={{ width: '30%' }}></Column>
+              <Column field="movies" sortable header="Filmes" body={comboMoviesBodyTemplate} editor={(options) => statusEditor(options)} style={{ width: '30%' }}></Column>
+              <Column field="best" sortable header="Melhor Plano?" body={comboBestBodyTemplate} editor={(options) => statusEditor(options)} style={{ width: '30%' }}></Column>
+              <Column field="giga" sortable header="Giga?" body={comboGigaBodyTemplate} editor={(options) => statusEditor(options)} style={{ width: '30%' }}></Column>
               <Column rowEditor headerStyle={{ width: '10%', minWidth: '8rem' }} bodyStyle={{ textAlign: 'center' }}></Column>
               <Column body={actionBodyTemplate} exportable={false} style={{ minWidth: '8rem' }}></Column>
             </DataTable>
           </div>
+          <Dialog visible={planDialog} style={{ width: '32rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Adicionar Plano" modal className="p-fluid" footer={plantDialogFooter} onHide={hideDialog}>
+            <div className="mb-6">
+              <label htmlFor="speed" className="font-bold">
+                Velocidade
+              </label>
+              <InputNumber value={plan.speed} onChange={(e) => onInputNumberChange(e, 'speed')} required rows={3} cols={20} />
+            </div>
+            <div className="mb-6">
+              <label htmlFor="price" className="font-bold">
+                Valor
+              </label>
+              <InputNumber value={plan.price} onChange={(e) => onInputNumberChange(e, 'price')} required mode="currency" currency="BRL" locale="pt-BR" />
+            </div>
+            <div className="mb-6">
+              <Checkbox inputId="wifi" name="wifi" value="sim" onChange={e => setCheckedWifi(e.checked)} checked={checkedWifi} />
+              <label htmlFor="wifi" className="ml-2">Wifi</label>
+            </div>
+            <div className="mb-6">
+              <Checkbox inputId="games" name="games" value="sim" onChange={e => setCheckedGames(e.checked)} checked={checkedGames} />
+              <label htmlFor="games" className="ml-2">Games</label>
+            </div>
+            <div className="mb-6">
+              <Checkbox inputId="movies" name="movies" value="sim" onChange={e => setCheckedMovies(e.checked)} checked={checkedMovies} />
+              <label htmlFor="movies" className="ml-2">Filmes</label>
+            </div>
+            <div className="mb-6">
+              <Checkbox inputId="best" name="best" value="sim" onChange={e => setCheckedBest(e.checked)} checked={checkedBest} />
+              <label htmlFor="best" className="ml-2">Melhor Plano?</label>
+            </div>
+            <div className="mb-6">
+              <Checkbox inputId="giga" name="giga" value="sim" onChange={e => setCheckedGiga(e.checked)} checked={checkedGiga} />
+              <label htmlFor="giga" className="ml-2">Velocidade em Giga?</label>
+            </div>
+          </Dialog>
         </div>
       </section>
     </main>
