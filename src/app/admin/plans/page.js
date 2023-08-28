@@ -197,37 +197,43 @@ const Page = () => {
   }
 
   const savePlan = async () => {
-    setPlanDialog(false);
-    setLoading(true);
-    setSubmitted(true);
 
-    let _plans = [...plans];
-    let _plan = { ...plan };
+    if (plan.price != null && plan.speed != null) {
 
-    const response = await fetch(`/api/plans`, {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        speed: _plan.speed,
-        price: _plan.price,
-        wifi: getEnumCombo(checkedWifi),
-        movies: getEnumCombo(checkedMovies),
-        games: getEnumCombo(checkedGames),
-        best: getEnumCombo(checkedBest),
-        giga: getEnumCombo(checkedGiga)
-      }),
-    });
+      setPlanDialog(false);
+      setLoading(true);
+      setSubmitted(true);
 
-    const returnal = await response.json();
+      let _plans = [...plans];
+      let _plan = { ...plan };
 
-    setPlans(_plans);
-    setPlan(emptyPlan);
-    _plans.push(returnal?.data.data);
-    toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Plano alterado com sucesso.', life: 3000 });
+      const response = await fetch(`/api/plans`, {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          speed: _plan.speed,
+          price: _plan.price,
+          wifi: getEnumCombo(checkedWifi),
+          movies: getEnumCombo(checkedMovies),
+          games: getEnumCombo(checkedGames),
+          best: getEnumCombo(checkedBest),
+          giga: getEnumCombo(checkedGiga)
+        }),
+      });
 
-    setLoading(false);
+      const returnal = await response.json();
+
+      setPlans(_plans);
+      setPlan(emptyPlan);
+      _plans.push(returnal?.data.data);
+      toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Plano alterado com sucesso.', life: 3000 });
+
+      setLoading(false);
+    } else {
+      toast.current.show({ severity: 'warn', summary: 'Obrigatório', detail: 'Campos valor e velocidade, são obrigatórios.', life: 3000 });
+    }
   };
 
   const plantDialogFooter = (
@@ -253,7 +259,7 @@ const Page = () => {
         <div className="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
           <div className="mx-auto max-w-screen-md text-center mb-8 lg:mb-12">
             <h2 className="mb-4 text-4xl tracking-tight font-extrabold">
-                Cadastro de Planos
+              Cadastro de Planos
             </h2>
           </div>
           <div className="mb-8 lg:mb-12">
@@ -278,13 +284,13 @@ const Page = () => {
               <label htmlFor="speed" className="font-bold">
                 Velocidade
               </label>
-              <InputNumber value={plan.speed} onChange={(e) => onInputNumberChange(e, 'speed')} required rows={3} cols={20} />
+              <InputNumber value={plan.speed} onChange={(e) => onInputNumberChange(e, 'speed')} className={plan.speed == null ? 'p-invalid' : ''} required rows={3} cols={20} placeholder="Preencha a velocidade" />
             </div>
             <div className="mb-6">
               <label htmlFor="price" className="font-bold">
                 Valor
               </label>
-              <InputNumber value={plan.price} onChange={(e) => onInputNumberChange(e, 'price')} required mode="currency" currency="BRL" locale="pt-BR" />
+              <InputNumber value={plan.price} onChange={(e) => onInputNumberChange(e, 'price')} className={plan.price == null ? 'p-invalid' : ''} required mode="currency" currency="BRL" locale="pt-BR" placeholder="Preencha o valor" />
             </div>
             <div className="mb-6">
               <Checkbox inputId="wifi" name="wifi" value="sim" onChange={e => setCheckedWifi(e.checked)} checked={checkedWifi} />

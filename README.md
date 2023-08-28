@@ -25,6 +25,7 @@ Neste repositório foram entregues todos os requisitos.
 - Utilizaria gerenciamento de estado com Redux.
 
 ## Como executar o projeto
+- Renomear o arquivo .env.local.example para .env.local;
 - Execute o comando: 
 ```
     docker-compose up -d
