@@ -6,7 +6,6 @@ import ComboComponent from './ComboComponent';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
-import { useFormik } from 'formik';
 import { InputMask } from 'primereact/inputmask';
 import { Toast } from 'primereact/toast';
 
@@ -48,31 +47,6 @@ export default function PlanComponent({ planId, speed, unit, price, best, wifi, 
         </div>
     );
 
-    const formik = useFormik({
-        initialValues: {
-            value: ''
-        },
-        validate: (data) => {
-            let errors = {};
-
-            if (!data.value) {
-                errors.value = 'Name - Surname is required.';
-            }
-
-            return errors;
-        },
-        onSubmit: (data) => {
-            data && show(data);
-            formik.resetForm();
-        }
-    });
-
-    const isFormFieldInvalid = (name) => !!(formik.touched[name] && formik.errors[name]);
-
-    const getFormErrorMessage = (name) => {
-        return isFormFieldInvalid(name) ? <small className="p-error">{formik.errors[name]}</small> : <small className="p-error">&nbsp;</small>;
-    };
-
     const bestPlan = (
         <div className={`${styles.best} flex flex-col mx-auto max-w-lg text-center bg-white rounded-lg border mb-8`}>
             <span className="">
@@ -92,27 +66,31 @@ export default function PlanComponent({ planId, speed, unit, price, best, wifi, 
 
 
     const saveContract = async () => {
-        setLoading(true);
+        if (order.name != null && order.email != null && order.phone != null) {
+            setLoading(true);
+            let _order = { ...order };
 
-        let _order = { ...order };
+            const response = await fetch(`/api/orders`, {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: _order.name,
+                    email: _order.email,
+                    phone: _order.phone,
+                    plan_id: planId
+                }),
+            });
 
-        const response = await fetch(`/api/orders`, {
-            method: 'POST',
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                name: _order.name,
-                email: _order.email,
-                phone: _order.phone,
-                plan_id: planId
-            }),
-        });
+            setLoading(false);
+            setVisible(false);
 
-        setLoading(false);
-        setVisible(false);
-
-        toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Aguarde a confirmação do contrato.', life: 3000 });
+            toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Aguarde a confirmação do contrato.', life: 3000 });
+        }
+        else {
+            toast.current.show({ severity: 'warn', summary: 'Obrigatório', detail: 'Todos os campos são obrigatórios para o contrato', life: 3000 });
+        }
     };
 
     return (
@@ -147,19 +125,19 @@ export default function PlanComponent({ planId, speed, unit, price, best, wifi, 
                     <label htmlFor="name" className="font-bold">
                         Nome
                     </label>
-                    <InputText value={order.name} onChange={(e) => onInputChange(e, 'name')} required rows={3} cols={20} placeholder="Digite seu nome" />
+                    <InputText value={order.name} onChange={(e) => onInputChange(e, 'name')} className={order.name == null ? 'p-invalid' : ''} required rows={3} cols={20} placeholder="Digite seu nome" />
                 </div>
                 <div className="mb-6">
                     <label htmlFor="email" className="font-bold">
                         Email
                     </label>
-                    <InputText value={order.email} onChange={(e) => onInputChange(e, 'email')} required rows={3} cols={20} placeholder="Digite seu email" />
+                    <InputText value={order.email} onChange={(e) => onInputChange(e, 'email')} className={order.email == null ? 'p-invalid' : ''} required rows={3} cols={20} placeholder="Digite seu email" />
                 </div>
                 <div className="mb-6">
                     <label htmlFor="phone" className="font-bold">
                         Telefone
                     </label>
-                    <InputMask id="phone" value={order.phone} onChange={(e) => onInputChange(e, 'phone')} mask="(99) 999999999" placeholder="(99) 999999999" unmask></InputMask>
+                    <InputMask id="phone" value={order.phone} onChange={(e) => onInputChange(e, 'phone')} className={order.phone == null ? 'p-invalid' : ''} mask="(99) 999999999" placeholder="(99) 999999999" unmask></InputMask>
                 </div>
             </Dialog>
         </div>
